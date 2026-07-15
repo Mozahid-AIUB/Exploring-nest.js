@@ -1,5 +1,10 @@
-import { Controller, Get, Post, Put, Patch, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Patch, Delete, Param, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { CourseService, } from './course.service';
+import { CreateCourseDto } from './dto/create-course.dto';
+import { UpdateCourseDto } from './dto/update-course.dto';
 
 @Controller('course')
 export class CourseController {
@@ -7,33 +12,56 @@ export class CourseController {
     constructor(private readonly courseService: CourseService) { }
 
     @Get()
-    getAllCourse(): string {
-        return this.courseService.getAllCourse();
+    getAllCourses(): object {
+        return this.courseService.getAllCourses();
     }
 
     @Post()
-    createCourse(): string {
-        return this.courseService.createCourse();
+    createCourse(@Body() dto: CreateCourseDto): object {
+        return this.courseService.createCourse(dto);
     }
 
     @Get(':id')
-    getCourseById(@Param("id") id: string): string {
+    getCourseById(@Param("id") id: string): object {
         return this.courseService.getCourseById(id);
     }
 
     @Put(':id')
-    updateCourse(@Param('id') id: string): string {
-        return this.courseService.updateCourse(id);
+    updateCourse(@Param('id') id: string, @Body() dto: UpdateCourseDto): object {
+        return this.courseService.updateCourse(id, dto);
     }
 
     @Patch(':id')
-    patchCourse(@Param('id') id: string): string {
-        return this.courseService.patchCourse(id);
+    patchCourse(@Param('id') id: string, @Body() dto: UpdateCourseDto): object {
+        return this.courseService.patchCourse(id, dto);
     }
 
     @Delete(':id')
-    deleteCourse(@Param('id') id: string): string {
+    deleteCourse(@Param('id') id: string): object {
         return this.courseService.deleteCourse(id);
+    }
+
+    @Post(':id/upload')
+    @UseInterceptors(FileInterceptor('file', {
+        storage: diskStorage({
+            destination: './uploads',
+            filename: (req, file, callback) => {
+                const uniqueName = `${Date.now()}-${file.originalname}`;
+                callback(null, uniqueName);
+            },
+        }),
+        fileFilter: (req, file, callback) => {
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
+            const ext = extname(file.originalname).toLowerCase();
+            if (!allowedExtensions.includes(ext)) {
+                return callback(new BadRequestException('Only .jpg, .jpeg, .png and .pdf files are allowed'), false);
+            }
+            callback(null, true);
+        },
+        limits: { fileSize: 2 * 1024 * 1024 },
+    }))
+    uploadCourseMaterial(@Param('id') id: string, @UploadedFile() file: Express.Multer.File): object {
+        return this.courseService.uploadCourseMaterial(id, file);
     }
 
 }
