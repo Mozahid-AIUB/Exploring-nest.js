@@ -1,0 +1,28 @@
+import { IsString, IsNotEmpty, IsNumber, Min, Max, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class CreateCourseDto {
+    @IsString()
+    @IsNotEmpty()
+    name: string;
+
+    @IsNotEmpty()
+    @IsString()
+    code: string;
+
+    @IsString()
+    @IsNotEmpty()
+    instructor: string;
+
+    @IsNumber()
+    @Min(1)
+    @Max(6)
+    @Type(() => Number)
+    credits: number;
+
+    @IsOptional()
+    @IsString()
+    description?: string;
+
+
+}
