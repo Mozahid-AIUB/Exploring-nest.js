@@ -6,8 +6,8 @@ export class CreateCourseDto {
     @IsNotEmpty()
     name: string;
 
-    @IsString()
     @IsNotEmpty()
+    @IsString()
     code: string;
 
     @IsString()
@@ -23,5 +23,6 @@ export class CreateCourseDto {
     @IsOptional()
     @IsString()
     description?: string;
+
 
 }
